@@ -1,11 +1,15 @@
 services:
-  my-node-app:
+  spotify-card-mapping:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: "my-node-app"
+    container_name: "spotify-card-mapping"
+    volumes: 
+      - data:/usr/src/app/data
     ports:
       - "3000:3000"
     # environment: 
     #   - NODE_ENV=production
     restart: unless-stopped
+volumes:
+  data:
