@@ -1,343 +1,378 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Spotify Album Selector (Card = Unique ID)</title>
-    <script src="https://unpkg.com/vue@3"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-      }
-      header {
-        background: #343a40;
-        color: #fff;
-        padding: 1rem;
-      }
-      h1 {
-        margin: 0;
-        font-size: 1.2rem;
-      }
-      .main {
-        display: flex;
-        height: calc(100vh - 60px);
-      }
-      .left-panel {
-        flex: 1;
-        padding: 1rem;
-        background: #f8f9fa;
-        overflow-y: auto;
-      }
-      .right-panel {
-        width: 300px;
-        background: #fff;
-        border-left: 1px solid #ccc;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fff;
-        margin-bottom: 1rem;
-      }
-      th,
-      td {
-        border: 1px solid #ccc;
-        padding: 0.5rem;
-      }
-      th {
-        background: #6c757d;
-        color: #fff;
-        font-weight: normal;
-        text-align: left;
-      }
-      input[type="text"] {
-        width: 100%;
-        padding: 0.25rem;
-        border: 1px solid #ccc;
-      }
-      button {
-        background: #007bff;
-        border: none;
-        color: #fff;
-        padding: 0.4rem 0.7rem;
-        cursor: pointer;
-        border-radius: 4px;
-      }
-      button:hover {
-        background: #0056b3;
-      }
-      .status {
-        margin-top: 0.5rem;
-        color: green;
-      }
-      .search-info {
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-      }
-      .search-bar {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-      }
-      .search-bar input {
-        flex: 1;
-      }
-      .search-results {
-        flex: 1;
-        overflow-y: auto;
-        margin-top: 0.5rem;
-      }
-      .search-item {
-        border: 1px solid #ccc;
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-      }
-      .search-item:hover {
-        background: #e9ecef;
-      }
-      .cancel-button {
-        margin-top: 0.5rem;
-      }
-      .copy-btn {
-        margin-top: 0.5rem;
-      }
-      .highlighted {
-        background-color: #fff3cd;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>Spotify Album Selector (Card = Unique ID)</h1>
-    </header>
-    <div id="app" class="main">
-      <div class="left-panel">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 20%">Card (ID)</th>
-              <th style="width: 35%">Name</th>
-              <th style="width: 30%">Spotify URI</th>
-              <th style="width: 15%">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in rows"
-              :key="row.card"
-              :id="'row-' + row.card"
-              :class="{ highlighted: highlightedCard === row.card }"
-            >
-              <td>
-                <input type="text" :value="row.card" readonly />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  v-model="row.name"
-                  @blur="updateRow(row)"
-                  placeholder="Name..."
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  v-model="row.url"
-                  @blur="updateRow(row)"
-                  placeholder="Spotify URI..."
-                />
-              </td>
-              <td>
-                <button @click="openSearch(row)">Search</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
 
-        <button class="copy-btn" @click="copyTableData">Copy table to clipboard</button>
+<head>
+  <meta charset="utf-8" />
+  <title>Spotify Album Selector (Card = Unique ID)</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        <div class="status" v-if="statusMsg">{{ statusMsg }}</div>
-      </div>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
 
-      <div class="right-panel">
-        <div v-if="searchRow">
-          <div class="search-info">
-            Searching for Card: {{ searchRow.card }}
-          </div>
-          <div class="search-bar">
-            <select v-model="searchType">
-              <option value="album">Album</option>
-              <option value="playlist">Playlist</option>
-              <option value="track">Track</option>
-              <option value="episode">Episode</option>
-              <option value="audiobook">Audiobook</option>
-            </select>
-            <input
-              type="text"
-              ref="searchInput"
-              v-model="searchQuery"
-              placeholder="Search..."
-              @keyup.enter="performSearch"
-            />
-            <button @click="performSearch">Go</button>
-          </div>
-          <div class="search-results">
-            <div
-              class="search-item"
-              v-for="album in searchResults"
-              :key="album.albumUri"
-              @click="selectAlbum(album)"
-            >
-              <strong>{{ album.albumArtist }} - {{ album.albumName }}</strong><br />
-              <small>{{ album.albumUri }}</small>
-            </div>
-          </div>
-          <button class="cancel-button" @click="closeSearch">Cancel</button>
-        </div>
-        <div v-else>
-          <p style="color:#777;">Select a row and click "Search" to look up a media.</p>
-        </div>
-      </div>
+    header {
+      background: #343a40;
+      color: #fff;
+      padding: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .main {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    .left-panel {
+      flex: 1;
+      padding: 1rem;
+      background: #f8f9fa;
+      overflow-y: auto;
+    }
+
+    .right-panel {
+      width: 300px;
+      background: #fff;
+      border-left: 1px solid #ccc;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-bottom: 1rem;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+    }
+
+    th {
+      background: #6c757d;
+      color: #fff;
+      font-weight: normal;
+      text-align: left;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.25rem;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #007bff;
+      border: none;
+      color: #fff;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .status {
+      margin-top: 0.5rem;
+      color: green;
+    }
+
+    .search-info {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+    }
+
+    .search-results {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+
+    .search-item {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+    }
+
+    .search-item:hover {
+      background: #e9ecef;
+    }
+
+    .cancel-button {
+      margin-top: 0.5rem;
+    }
+
+    .copy-btn {
+      margin-top: 0.5rem;
+    }
+
+    .highlighted {
+      background-color: #fff3cd;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Spotify Album Selector (Card = Unique ID)</h1>
+  </header>
+  <div id="app" class="main">
+    <div class="left-panel">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%">Card (ID)</th>
+            <th style="width: 35%">Name</th>
+            <th style="width: 30%">Spotify URI</th>
+            <th style="width: 15%">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in rows" :key="row.card" :id="'row-' + row.card"
+            :class="{ highlighted: highlightedCard === row.card }">
+            <td>
+              <input type="text" :value="row.card" readonly />
+            </td>
+            <td>
+              <input type="text" v-model="row.name" @blur="updateRow(row)" placeholder="Name..." />
+            </td>
+            <td>
+              <input type="text" v-model="row.url" @blur="updateRow(row)" placeholder="Spotify URI..." />
+            </td>
+            <td>
+              <button @click="openSearch(row)">Search</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button class="copy-btn" @click="copyTableData">Copy table to clipboard</button>
+
+      <div class="status" v-if="statusMsg">{{ statusMsg }}</div>
     </div>
 
-    <script>
-      const { createApp } = Vue;
+    <div class="right-panel">
+      <div v-if="searchRow">
+        <div class="search-info">
+          Searching for Card: {{ searchRow.card }}
+        </div>
+        <div class="search-bar">
+          <select v-model="searchType">
+            <option value="album">Album</option>
+            <option value="playlist">Playlist</option>
+            <option value="track">Track</option>
+            <option value="episode">Episode</option>
+            <option value="audiobook">Audiobook</option>
+          </select>
+          <input type="text" ref="searchInput" v-model="searchQuery" placeholder="Search..."
+            @keyup.enter="performSearch" />
+          <button @click="performSearch">Go</button>
+        </div>
+        <div class="search-results">
+          <div class="search-item" v-for="album in searchResults" :key="album.albumUri" @click="selectAlbum(album)">
+            <strong>{{ album.albumArtist }} - {{ album.albumName }}</strong><br />
+            <small>{{ album.albumUri }}</small>
+          </div>
+        </div>
+        <button class="cancel-button" @click="closeSearch">Cancel</button>
+      </div>
+      <div v-else>
+        <p style="color:#777;">Select a row and click "Search" to look up a media.</p>
+      </div>
+    </div>
+  </div>
 
-      createApp({
-        data() {
-          return {
-            rows: [],
-            ws: null,
-            statusMsg: "",
-            searchRow: null,
-            searchQuery: "",
-            searchResults: [],
-            highlightedCard: null,
-            searchType: "album"
-          };
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          rows: [],
+          ws: null,
+          statusMsg: "",
+          searchRow: null,
+          searchQuery: "",
+          searchResults: [],
+          highlightedCard: null,
+          searchType: "album"
+        };
+      },
+      created() {
+        fetch("/data")
+          .then(r => r.json())
+          .then(data => {
+            this.rows = data;
+          });
+
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = `${protocol}://${window.location.host}`;
+        this.ws = new WebSocket(wsUrl);
+
+        this.ws.onmessage = evt => {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === "newCard") {
+            this.handleNewCard(msg.payload);
+          } else if (msg.type === "updateCard") {
+            this.handleUpdateCard(msg.payload);
+          } else if (msg.type === "openCard") {
+            this.handleOpenCard(msg.payload);
+          }
+        };
+      },
+      methods: {
+        updateRow(row) {
+          const converted = this.spotifyOpenLinkToUri(row.url);
+          if (converted) {
+            // If valid, overwrite row.url with the Spotify URI
+            row.url = converted;
+          }
+          fetch("/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ card: row.card, name: row.name, url: row.url })
+          });
         },
-        created() {
-          fetch("/data")
+        handleNewCard(newRow) {
+          this.rows.push(newRow);
+          this.handleOpenCard(newRow.card);
+        },
+        handleUpdateCard(updatedRow) {
+          const idx = this.rows.findIndex(r => r.card === updatedRow.card);
+          if (idx !== -1) this.rows[idx] = updatedRow;
+        },
+        handleOpenCard(cardId) {
+          const row = this.rows.find(r => r.card === cardId);
+          if (row) {
+            this.highlightedCard = cardId;
+            this.$nextTick(() => {
+              const el = document.getElementById("row-" + cardId);
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            });
+            this.openSearch(row);
+          }
+        },
+        openSearch(row) {
+          this.searchRow = row;
+          this.searchQuery = "";
+          this.searchResults = [];
+          this.highlightedCard = row.card;
+          this.$nextTick(() => {
+            if (this.$refs.searchInput) this.$refs.searchInput.focus();
+          });
+        },
+        closeSearch() {
+          this.searchRow = null;
+          this.searchQuery = "";
+          this.searchResults = [];
+        },
+        performSearch() {
+          if (!this.searchQuery.trim()) return;
+          fetch(`/spotifySearch?query=${encodeURIComponent(this.searchQuery)}&type=${this.searchType}`)
             .then(r => r.json())
             .then(data => {
-              this.rows = data;
+              this.searchResults = data;
             });
-
-          const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-          const wsUrl = `${protocol}://${window.location.host}`;
-          this.ws = new WebSocket(wsUrl);
-
-          this.ws.onmessage = evt => {
-            const msg = JSON.parse(evt.data);
-            if (msg.type === "newCard") {
-              this.handleNewCard(msg.payload);
-            } else if (msg.type === "updateCard") {
-              this.handleUpdateCard(msg.payload);
-            } else if (msg.type === "openCard") {
-              this.handleOpenCard(msg.payload);
-            }
-          };
         },
-        methods: {
-          updateRow(row) {
-            fetch("/update", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ card: row.card, name: row.name, url: row.url })
-            });
-          },
-          handleNewCard(newRow) {
-            this.rows.push(newRow);
-            this.handleOpenCard(newRow.card);
-          },
-          handleUpdateCard(updatedRow) {
-            const idx = this.rows.findIndex(r => r.card === updatedRow.card);
-            if (idx !== -1) this.rows[idx] = updatedRow;
-          },
-          handleOpenCard(cardId) {
-            const row = this.rows.find(r => r.card === cardId);
-            if (row) {
-              this.highlightedCard = cardId;
-              this.$nextTick(() => {
-                const el = document.getElementById("row-" + cardId);
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-              });
-              this.openSearch(row);
-            }
-          },
-          openSearch(row) {
-            this.searchRow = row;
-            this.searchQuery = "";
-            this.searchResults = [];
-            this.highlightedCard = row.card;
-            this.$nextTick(() => {
-              if (this.$refs.searchInput) this.$refs.searchInput.focus();
-            });
-          },
-          closeSearch() {
-            this.searchRow = null;
-            this.searchQuery = "";
-            this.searchResults = [];
-          },
-          performSearch() {
-            if (!this.searchQuery.trim()) return;
-            fetch(`/spotifySearch?query=${encodeURIComponent(this.searchQuery)}&type=${this.searchType}`)
-              .then(r => r.json())
-              .then(data => {
-                this.searchResults = data;
-              });
-          },
-          selectAlbum(album) {
-            if (!this.searchRow) return;
-            fetch("/selectAlbum", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                card: this.searchRow.card,
-                albumArtist: album.albumArtist,
-                albumName: album.albumName,
-                albumUri: album.albumUri,
-                albumArt: album.albumArt
-              })
-            }).then(() => {
-              this.closeSearch();
-            });
-          },
-          fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.opacity = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-              document.execCommand("copy");
-            } catch {}
-            document.body.removeChild(textArea);
-          },
-          copyTableData() {
-            const lines = this.rows.map(r => `    '${r.card}': '${r.url}'`);
-            const finalString = lines.join("\n");
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(finalString).catch(() => {
-                this.fallbackCopy(finalString);
-              });
-            } else {
+        selectAlbum(album) {
+          if (!this.searchRow) return;
+          fetch("/selectAlbum", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              card: this.searchRow.card,
+              albumArtist: album.albumArtist,
+              albumName: album.albumName,
+              albumUri: album.albumUri,
+              albumArt: album.albumArt
+            })
+          }).then(() => {
+            this.closeSearch();
+          });
+        },
+        fallbackCopy(text) {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          try {
+            document.execCommand("copy");
+          } catch { }
+          document.body.removeChild(textArea);
+        },
+        copyTableData() {
+          const lines = this.rows.map(r => `    '${r.card}': '${r.url}'`);
+          const finalString = lines.join("\n");
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(finalString).catch(() => {
               this.fallbackCopy(finalString);
+            });
+          } else {
+            this.fallbackCopy(finalString);
+          }
+          this.statusMsg = "Copied to clipboard!";
+          setTimeout(() => (this.statusMsg = ""), 3000);
+        },
+        spotifyOpenLinkToUri(spotifyUrl) {
+          if(!spotifyUrl || !spotifyUrl.startsWith('https://open.spotify.com/'))
+            return null;
+          try {
+            // Parse the URL to cleanly separate path and any query params
+            const urlObj = new URL(spotifyUrl);
+
+            // Example pathname: "/track/XXXXXXXX"
+            // Split on "/" and remove empty entries
+            const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+
+            // We expect something like ["track", "XXXXXXXX"]
+            if (pathSegments.length < 2) {
+              throw new Error('Not a valid Spotify open link path');
             }
-            this.statusMsg = "Copied to clipboard!";
-            setTimeout(() => (this.statusMsg = ""), 3000);
+
+            // The first segment is the type (track, album, artist, playlist, episode, etc.)
+            const type = pathSegments[0];
+            // The second segment is the resource ID
+            const id = pathSegments[1];
+
+            // Construct the URI in the format: spotify:<type>:<id>
+            return `spotify:${type}:${id}`;
+          } catch (error) {
+            // If URL parsing fails or path is unexpected, return null or handle the error
+            console.error('Error converting Spotify open link to URI:', error.message);
+            return null;
           }
         }
-      }).mount("#app");
-    </script>
-  </body>
+      }
+    }).mount("#app");
+  </script>
+</body>
+
 </html>
